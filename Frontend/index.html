@@ -1,0 +1,1018 @@
+<!-- API key: 17ffcab810ce4802bcbc41f3b318b7fa -->
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buscador de Videojuegos</title>
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400..900&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+    <!-- CSS propio -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar navbar-expand-lg navbar-gradient shadow-sm" data-bs-theme="dark">
+  <div class="container">
+
+    <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="#" onclick="volverInicio()">
+      <i class="fa-solid fa-gamepad"></i>
+      GameFinder
+    </a>
+
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContenido">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarContenido">
+      <ul class="navbar-nav ms-auto align-items-lg-center gap-1">
+
+        <li class="nav-item">
+          <a class="nav-link" href="#" onclick="volverInicio()">Inicio</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#" onclick="cargarMejorValorados()">Top rating</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#" onclick="cargarProximos()">Próximos</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#" onclick="mostrarQuienesSomos()">Quiénes somos</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#" onclick="mostrarContacto()">Contacto</a>
+        </li>
+
+        <!-- Favoritos (solo si hay sesión) -->
+        <li class="nav-item" id="navFavoritos" style="display:none">
+          <a class="nav-link" href="#" onclick="mostrarFavoritos()">
+            <i class="fa-solid fa-heart text-danger"></i> Favoritos
+          </a>
+        </li>
+
+        <!-- Botón login (sin sesión) -->
+        <li class="nav-item" id="navLogin">
+          <a class="nav-link btn btn-sm btn-outline-light px-3 ms-2" href="#" onclick="mostrarModalAuth()">
+            <i class="fa-solid fa-right-to-bracket"></i> Iniciar sesión
+          </a>
+        </li>
+
+        <!-- Dropdown usuario (con sesión) -->
+        <li class="nav-item dropdown" id="navUser" style="display:none">
+          <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+            <i class="fa-solid fa-circle-user"></i> <span id="navUsername"></span>
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end bg-dark">
+            <li><a class="dropdown-item text-white" href="#" onclick="mostrarFavoritos()">
+              <i class="fa-solid fa-heart text-danger"></i> Mis favoritos
+            </a></li>
+            <li><hr class="dropdown-divider border-secondary"></li>
+            <li><a class="dropdown-item text-danger" href="#" onclick="logout()">
+              <i class="fa-solid fa-right-from-bracket"></i> Cerrar sesión
+            </a></li>
+          </ul>
+        </li>
+
+      </ul>
+    </div>
+
+  </div>
+</nav>
+
+
+<div class="container py-5">
+
+    <!-- HERO BUSCADOR -->
+    <div id="heroBusqueda" class="hero-inicio">
+
+        <div class="logo-grande">
+            <i class="fa-solid fa-gamepad"></i>
+            <span>GameFinder</span>
+        </div>
+
+        <div class="buscador-box">
+            <input
+                type="text"
+                id="NombreJuego"
+                class="form-control"
+                placeholder="Busca un videojuego..."
+            >
+            <button class="btn btn-warning" onclick="buscarJuego()">
+                Buscar
+            </button>
+        </div>
+
+    </div>
+
+    <div class="row my-5">
+        <div id="resultado" class="w-100"></div>
+    </div>
+
+</div>
+
+
+<!-- ===================== MODAL JUEGO ===================== -->
+<div class="modal fade" id="modalJuego">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content bg-dark text-white">
+
+      <div class="modal-header border-secondary">
+        <h5 class="modal-title" id="modalTitulo">Detalles del juego</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+        <div id="modalContenido"></div>
+        <div id="reviewsSection"></div>
+      </div>
+
+      <div class="modal-footer border-secondary justify-content-between">
+        <button id="btnFavorito" class="btn btn-outline-danger" onclick="toggleFavorito()">
+          <i class="fa-regular fa-heart"></i> Agregar a favoritos
+        </button>
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+<!-- ===================== MODAL AUTH ===================== -->
+<div class="modal fade" id="modalAuth" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content bg-dark text-white border-secondary">
+
+      <div class="modal-header border-secondary">
+        <h5 class="modal-title"><i class="fa-solid fa-gamepad"></i> GameFinder</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+
+        <!-- Tabs -->
+        <ul class="nav nav-tabs border-secondary mb-4" id="authTabs">
+          <li class="nav-item">
+            <button class="nav-link active text-white" id="tabLoginBtn" onclick="mostrarTab('login')">
+              Iniciar sesión
+            </button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link text-secondary" id="tabRegBtn" onclick="mostrarTab('registro')">
+              Registrarse
+            </button>
+          </li>
+        </ul>
+
+        <!-- Login -->
+        <div id="tabLogin">
+          <div class="mb-3">
+            <label class="form-label small">Email</label>
+            <input type="email" id="loginEmail" class="form-control bg-dark text-white border-secondary" placeholder="correo@ejemplo.com">
+          </div>
+          <div class="mb-3">
+            <label class="form-label small">Contraseña</label>
+            <input type="password" id="loginPass" class="form-control bg-dark text-white border-secondary" placeholder="Tu contraseña">
+          </div>
+          <div id="loginError" class="alert alert-danger py-2 small" style="display:none"></div>
+          <button class="btn btn-warning w-100" onclick="loginUsuario()">
+            <i class="fa-solid fa-right-to-bracket"></i> Entrar
+          </button>
+        </div>
+
+        <!-- Registro -->
+        <div id="tabRegistro" style="display:none">
+          <div class="mb-3">
+            <label class="form-label small">Nombre de usuario</label>
+            <input type="text" id="regUser" class="form-control bg-dark text-white border-secondary" placeholder="gamertag">
+          </div>
+          <div class="mb-3">
+            <label class="form-label small">Email</label>
+            <input type="email" id="regEmail" class="form-control bg-dark text-white border-secondary" placeholder="correo@ejemplo.com">
+          </div>
+          <div class="mb-3">
+            <label class="form-label small">Contraseña <span class="text-secondary">(mín. 6 caracteres)</span></label>
+            <input type="password" id="regPass" class="form-control bg-dark text-white border-secondary" placeholder="Contraseña segura">
+          </div>
+          <div id="regError" class="alert alert-danger py-2 small" style="display:none"></div>
+          <button class="btn btn-warning w-100" onclick="registrarUsuario()">
+            <i class="fa-solid fa-user-plus"></i> Crear cuenta
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ===================== MODAL EDITAR FAVORITO ===================== -->
+<div class="modal fade" id="modalEditarFav" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content bg-dark text-white border-secondary">
+      <div class="modal-header border-secondary">
+        <h5 class="modal-title"><i class="fa-solid fa-pen"></i> Editar nota del favorito</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="editFavId">
+        <div class="mb-3">
+          <label class="form-label small">Nota personal <span class="text-secondary">(máx. 500 caracteres)</span></label>
+          <textarea id="editFavNotes" rows="4"
+            class="form-control bg-dark text-white border-secondary"
+            placeholder="Escribe algo sobre este juego..."></textarea>
+        </div>
+        <div id="editFavError" class="alert alert-danger py-2 small" style="display:none"></div>
+      </div>
+      <div class="modal-footer border-secondary">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button class="btn btn-warning" onclick="guardarNotaFavorito()">
+          <i class="fa-solid fa-floppy-disk"></i> Guardar nota
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ===================== FOOTER ===================== -->
+<footer class="text-center text-secondary py-4 mt-5 border-top border-secondary">
+  <p class="mb-1"><i class="fa-solid fa-gamepad"></i> <strong>GameFinder</strong> &mdash; Programación para Internet SIS3410</p>
+  <p class="small mb-0">Datos proporcionados por <a href="https://rawg.io" target="_blank">RAWG.io</a></p>
+</footer>
+
+
+<script>
+const API_KEY  = "17ffcab810ce4802bcbc41f3b318b7fa"
+const BASE_URL = "http://localhost:3000/api"
+
+let currentUser    = JSON.parse(localStorage.getItem('gf_user')) || null
+let favoritosMap   = {}   // { rawgId: favoriteDocId }
+let currentGameModal = null
+
+
+/* ============================================================
+   AUTH
+============================================================ */
+
+function actualizarNavbar() {
+    if (currentUser) {
+        $('#navLogin').hide()
+        $('#navUser').show()
+        $('#navFavoritos').show()
+        $('#navUsername').text(currentUser.username)
+    } else {
+        $('#navLogin').show()
+        $('#navUser').hide()
+        $('#navFavoritos').hide()
+        favoritosMap = {}
+    }
+}
+
+function mostrarModalAuth() {
+    mostrarTab('login')
+    new bootstrap.Modal(document.getElementById('modalAuth')).show()
+}
+
+function mostrarTab(tab) {
+    if (tab === 'login') {
+        $('#tabLogin').show()
+        $('#tabRegistro').hide()
+        $('#tabLoginBtn').addClass('active text-white').removeClass('text-secondary')
+        $('#tabRegBtn').removeClass('active text-white').addClass('text-secondary')
+    } else {
+        $('#tabLogin').hide()
+        $('#tabRegistro').show()
+        $('#tabRegBtn').addClass('active text-white').removeClass('text-secondary')
+        $('#tabLoginBtn').removeClass('active text-white').addClass('text-secondary')
+    }
+}
+
+async function loginUsuario() {
+    const email    = $('#loginEmail').val().trim()
+    const password = $('#loginPass').val()
+    $('#loginError').hide()
+
+    try {
+        const res  = await fetch(`${BASE_URL}/users/login`, {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({ email, password })
+        })
+        const data = await res.json()
+
+        if (!data.success) {
+            $('#loginError').text(data.message).show()
+            return
+        }
+
+        currentUser = data.data
+        localStorage.setItem('gf_user', JSON.stringify(currentUser))
+        bootstrap.Modal.getInstance(document.getElementById('modalAuth')).hide()
+        actualizarNavbar()
+        await cargarFavoritosUsuario()
+
+    } catch(e) {
+        $('#loginError').text('No se pudo conectar con el servidor. ¿Está corriendo el backend?').show()
+    }
+}
+
+async function registrarUsuario() {
+    const username = $('#regUser').val().trim()
+    const email    = $('#regEmail').val().trim()
+    const password = $('#regPass').val()
+    $('#regError').hide()
+
+    try {
+        const res  = await fetch(`${BASE_URL}/users`, {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({ username, email, password })
+        })
+        const data = await res.json()
+
+        if (!data.success) {
+            const msg = data.message || 'Error al registrar'
+            $('#regError').text(msg).show()
+            return
+        }
+
+        // Auto-login tras registro
+        await _loginInterno(email, password)
+
+    } catch(e) {
+        $('#regError').text('No se pudo conectar con el servidor. ¿Está corriendo el backend?').show()
+    }
+}
+
+async function _loginInterno(email, password) {
+    const res  = await fetch(`${BASE_URL}/users/login`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ email, password })
+    })
+    const data = await res.json()
+    if (data.success) {
+        currentUser = data.data
+        localStorage.setItem('gf_user', JSON.stringify(currentUser))
+        bootstrap.Modal.getInstance(document.getElementById('modalAuth')).hide()
+        actualizarNavbar()
+        await cargarFavoritosUsuario()
+    }
+}
+
+function logout() {
+    currentUser  = null
+    favoritosMap = {}
+    localStorage.removeItem('gf_user')
+    actualizarNavbar()
+}
+
+
+/* ============================================================
+   FAVORITOS
+============================================================ */
+
+async function cargarFavoritosUsuario() {
+    if (!currentUser) return
+    try {
+        const res  = await fetch(`${BASE_URL}/favorites/user/${currentUser._id}`)
+        const data = await res.json()
+        favoritosMap = {}
+        if (data.success) {
+            data.data.forEach(fav => { favoritosMap[fav.rawgId] = fav._id })
+        }
+    } catch(e) {}
+}
+
+function actualizarBotonFavorito() {
+    if (!currentGameModal) return
+    const rawgId = currentGameModal.id
+
+    if (!currentUser) {
+        $('#btnFavorito')
+            .html('<i class="fa-regular fa-heart"></i> Inicia sesión para guardar')
+            .removeClass('btn-danger').addClass('btn-outline-danger')
+        return
+    }
+
+    if (favoritosMap[rawgId]) {
+        $('#btnFavorito')
+            .html('<i class="fa-solid fa-heart"></i> Quitar de favoritos')
+            .removeClass('btn-outline-danger').addClass('btn-danger')
+    } else {
+        $('#btnFavorito')
+            .html('<i class="fa-regular fa-heart"></i> Agregar a favoritos')
+            .removeClass('btn-danger').addClass('btn-outline-danger')
+    }
+}
+
+async function toggleFavorito() {
+    if (!currentUser) { mostrarModalAuth(); return }
+    if (!currentGameModal) return
+
+    const rawgId = currentGameModal.id
+
+    if (favoritosMap[rawgId]) {
+        try {
+            const res  = await fetch(`${BASE_URL}/favorites/${favoritosMap[rawgId]}`, {
+                method:  'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body:    JSON.stringify({ userId: currentUser._id })
+            })
+            const data = await res.json()
+            if (data.success) {
+                delete favoritosMap[rawgId]
+                actualizarBotonFavorito()
+            }
+        } catch(e) {}
+    } else {
+        try {
+            const j   = currentGameModal
+            const res = await fetch(`${BASE_URL}/favorites`, {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body:    JSON.stringify({
+                    userId:           currentUser._id,
+                    rawgId:           j.id,
+                    name:             j.name,
+                    background_image: j.background_image,
+                    rating:           j.rating,
+                    released:         j.released,
+                    genres:           (j.genres || []).map(g => g.name)
+                })
+            })
+            const data = await res.json()
+            if (data.success) {
+                favoritosMap[rawgId] = data.data._id
+                actualizarBotonFavorito()
+            }
+        } catch(e) {}
+    }
+}
+
+async function mostrarFavoritos() {
+    if (!currentUser) { mostrarModalAuth(); return }
+
+    document.getElementById("heroBusqueda").classList.add("compacto")
+    $("#resultado").html('<p class="text-center text-secondary">Cargando favoritos...</p>')
+
+    try {
+        const res  = await fetch(`${BASE_URL}/favorites/user/${currentUser._id}`)
+        const data = await res.json()
+
+        if (!data.success || !data.data.length) {
+            $("#resultado").html(
+                '<p class="text-center text-secondary mt-4"><i class="fa-regular fa-heart fa-2x mb-3 d-block"></i>No tienes juegos guardados aún.</p>'
+            )
+            return
+        }
+
+        let html = '<h4 class="text-center mb-4 text-secondary"><i class="fa-solid fa-heart text-danger"></i> Mis Favoritos</h4><div class="row">'
+
+        data.data.forEach(fav => {
+            const notaEscapada = (fav.notes || '').replace(/'/g, "\\'")
+            html += `
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100 text-white card-animada">
+                        <img src="${fav.background_image || 'https://via.placeholder.com/400x250'}" class="card-img-top">
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title">${fav.name}</h5>
+                            <p class="mb-1">⭐ ${fav.rating}</p>
+                            <p>📅 ${fav.released || 'Desconocido'}</p>
+                            ${fav.notes ? `<p class="text-secondary small fst-italic mb-2">"${fav.notes}"</p>` : ''}
+                            <div class="mt-auto d-flex gap-2">
+                                <button class="btn btn-outline-light flex-grow-1" onclick="verDetalles(${fav.rawgId})">Ver más</button>
+                                <button class="btn btn-outline-secondary" title="Editar nota"
+                                    onclick="editarNotaFavorito('${fav._id}', '${notaEscapada}')">
+                                    <i class="fa-solid fa-pen"></i>
+                                </button>
+                                <button class="btn btn-outline-danger" title="Quitar de favoritos"
+                                    onclick="quitarFavoritoCard('${fav._id}', ${fav.rawgId}, this)">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `
+        })
+
+        html += '</div>'
+        $("#resultado").html(html)
+
+    } catch(e) {
+        $("#resultado").html('<p class="text-danger text-center">Error al cargar favoritos</p>')
+    }
+}
+
+async function quitarFavoritoCard(favId, rawgId, btn) {
+    try {
+        const res  = await fetch(`${BASE_URL}/favorites/${favId}`, {
+            method:  'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({ userId: currentUser._id })
+        })
+        const data = await res.json()
+        if (data.success) {
+            delete favoritosMap[rawgId]
+            $(btn).closest('.col-md-4').fadeOut(300, function(){ $(this).remove() })
+        }
+    } catch(e) {}
+}
+
+
+/* ============================================================
+   RESEÑAS
+============================================================ */
+
+async function cargarReviews(rawgId) {
+    try {
+        const res  = await fetch(`${BASE_URL}/reviews/game/${rawgId}`)
+        const data = await res.json()
+
+        let html = '<hr class="border-secondary"><h5 class="mt-3"><i class="fa-solid fa-star text-warning"></i> Reseñas de la comunidad</h5>'
+
+        if (!data.success || !data.data.length) {
+            html += '<p class="text-secondary small">Sin reseñas todavía. ¡Sé el primero!</p>'
+        } else {
+            data.data.forEach(r => {
+                const esMio = currentUser && r.userId && r.userId._id === currentUser._id
+                html += `
+                    <div class="border border-secondary rounded p-3 mb-2">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <strong class="small">${r.userId?.username || 'Usuario'}</strong>
+                            <span class="badge bg-warning text-dark">${r.score}/10</span>
+                        </div>
+                        <p class="mb-1 small">${r.body}</p>
+                        ${esMio ? `
+                            <button class="btn btn-sm btn-outline-danger mt-1"
+                                onclick="eliminarReview('${r._id}')">
+                                <i class="fa-solid fa-trash"></i> Eliminar
+                            </button>
+                        ` : ''}
+                    </div>
+                `
+            })
+        }
+
+        if (currentUser) {
+            html += `
+                <div class="mt-3 p-3 border border-secondary rounded">
+                    <h6 class="mb-3"><i class="fa-solid fa-pen"></i> Deja tu reseña</h6>
+                    <div class="mb-2">
+                        <label class="form-label small">Puntuación (1-10)</label>
+                        <input type="number" id="reviewScore"
+                            class="form-control form-control-sm bg-dark text-white border-secondary"
+                            min="1" max="10" value="8">
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label small">Reseña <span class="text-secondary">(mín. 10 caracteres)</span></label>
+                        <textarea id="reviewBody" rows="3"
+                            class="form-control form-control-sm bg-dark text-white border-secondary"
+                            placeholder="¿Qué te pareció el juego?"></textarea>
+                    </div>
+                    <div id="reviewError" class="alert alert-danger py-1 small" style="display:none"></div>
+                    <button class="btn btn-warning btn-sm" onclick="enviarReview()">
+                        <i class="fa-solid fa-paper-plane"></i> Publicar
+                    </button>
+                </div>
+            `
+        } else {
+            html += `
+                <p class="text-secondary small mt-3">
+                    <a href="#" onclick="mostrarModalAuth()">Inicia sesión</a> para dejar una reseña.
+                </p>
+            `
+        }
+
+        $('#reviewsSection').html(html)
+
+    } catch(e) {
+        $('#reviewsSection').html('<p class="text-secondary small">No se pudieron cargar las reseñas.</p>')
+    }
+}
+
+async function enviarReview() {
+    const score = parseInt($('#reviewScore').val())
+    const body  = $('#reviewBody').val().trim()
+    $('#reviewError').hide()
+
+    if (!score || score < 1 || score > 10) {
+        $('#reviewError').text('La puntuación debe estar entre 1 y 10').show()
+        return
+    }
+    if (body.length < 10) {
+        $('#reviewError').text('La reseña debe tener al menos 10 caracteres').show()
+        return
+    }
+
+    try {
+        const res  = await fetch(`${BASE_URL}/reviews`, {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({
+                userId:   currentUser._id,
+                rawgId:   currentGameModal.id,
+                gameName: currentGameModal.name,
+                score,
+                body
+            })
+        })
+        const data = await res.json()
+
+        if (!data.success) {
+            $('#reviewError').text(data.message || 'Error al publicar').show()
+            return
+        }
+
+        await cargarReviews(currentGameModal.id)
+
+    } catch(e) {
+        $('#reviewError').text('Error al conectar con el servidor').show()
+    }
+}
+
+async function eliminarReview(reviewId) {
+    try {
+        const res  = await fetch(`${BASE_URL}/reviews/${reviewId}`, {
+            method:  'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({ userId: currentUser._id })
+        })
+        const data = await res.json()
+        if (data.success) await cargarReviews(currentGameModal.id)
+    } catch(e) {}
+}
+
+
+
+
+function buscarJuego() {
+    document.getElementById("heroBusqueda").classList.add("compacto")
+
+    const nombre = $("#NombreJuego").val().trim()
+
+    if (!nombre) {
+        $("#resultado").html('<p class="text-danger">Escribe el nombre de un juego</p>')
+        return
+    }
+
+    $("#resultado").html('<p class="text-center text-secondary">Buscando...</p>')
+
+    $.ajax({
+        url:    `https://api.rawg.io/api/games?key=${API_KEY}&search=${nombre}`,
+        method: 'GET',
+        success: function(data) {
+            if (!data.results.length) {
+                $("#resultado").html('<p class="text-center">No se encontraron resultados</p>')
+                return
+            }
+            mostrarJuegos(data.results, `Resultados para: "${nombre}"`)
+        },
+        error: function() {
+            $("#resultado").html('<p class="text-danger text-center">Error al buscar</p>')
+        }
+    })
+}
+
+function verDetalles(id) {
+    $('#modalContenido').html('<p class="text-center py-4">Cargando...</p>')
+    $('#reviewsSection').html('')
+    $('#modalTitulo').text('Detalles del juego')
+    $('#btnFavorito').html('<i class="fa-regular fa-heart"></i> Agregar a favoritos')
+        .removeClass('btn-danger').addClass('btn-outline-danger')
+
+    $.ajax({
+        url:    `https://api.rawg.io/api/games/${id}?key=${API_KEY}`,
+        method: 'GET',
+        success: async function(data) {
+            currentGameModal = data
+
+            const desc = data.description_raw
+                ? data.description_raw.slice(0, 500) + (data.description_raw.length > 500 ? '...' : '')
+                : 'Descripción no disponible'
+
+            let html = `
+                <img src="${data.background_image || 'https://via.placeholder.com/800x400'}"
+                    class="img-fluid rounded mb-3 w-100" style="max-height:280px;object-fit:cover">
+                <h3>${data.name}</h3>
+                <p class="text-secondary small">${desc}</p>
+                <hr class="border-secondary">
+                <p><strong>Géneros:</strong> ${data.genres?.map(g => g.name).join(', ') || 'N/A'}</p>
+                <p><strong>Desarrolladores:</strong> ${data.developers?.map(d => d.name).join(', ') || 'N/A'}</p>
+                <p><strong>Metacritic:</strong> ${data.metacritic || 'N/A'}</p>
+                <p><strong>Tiempo de juego:</strong> ${data.playtime || 0} hrs</p>
+                <p><strong>Website:</strong> ${data.website
+                    ? `<a href="${data.website}" target="_blank">${data.website}</a>`
+                    : 'N/A'}
+                </p>
+            `
+
+            $('#modalTitulo').text(data.name)
+            $('#modalContenido').html(html)
+
+            actualizarBotonFavorito()
+            cargarScreenshots(id)
+            await cargarReviews(id)
+
+            new bootstrap.Modal(document.getElementById('modalJuego')).show()
+        }
+    })
+}
+
+function cargarScreenshots(id) {
+    $.ajax({
+        url:    `https://api.rawg.io/api/games/${id}/screenshots?key=${API_KEY}`,
+        method: 'GET',
+        success: function(screens) {
+            if (!screens.results || !screens.results.length) return
+
+            let html = '<h5 class="mt-4">Screenshots</h5><div class="row">'
+
+            screens.results.slice(0, 4).forEach(img => {
+                html += `
+                    <div class="col-md-6 mb-3">
+                        <img src="${img.image}" class="img-fluid rounded shadow">
+                    </div>
+                `
+            })
+
+            html += '</div>'
+            $('#modalContenido').append(html)
+        }
+    })
+}
+
+function volverInicio() {
+    $("#NombreJuego").val("")
+    $("#resultado").html("")
+    document.getElementById("heroBusqueda").classList.remove("compacto")
+    cargarPopulares()
+}
+
+function cargarPopulares() {
+    $("#resultado").html('<p class="text-center text-secondary">Cargando juegos populares...</p>')
+
+    $.ajax({
+        url:    `https://api.rawg.io/api/games?key=${API_KEY}&page_size=30`,
+        method: 'GET',
+        success: function(data) {
+            mostrarJuegos(data.results, "Juegos populares")
+        },
+        error: function() {
+            $("#resultado").html('<p class="text-danger text-center">Error al cargar populares</p>')
+        }
+    })
+}
+
+function cargarProximos() {
+    const hoy    = new Date().toISOString().split("T")[0]
+    const finAno = new Date(new Date().getFullYear(), 11, 31).toISOString().split("T")[0]
+
+    $("#resultado").html('<p class="text-center text-secondary">Cargando próximos lanzamientos...</p>')
+
+    $.ajax({
+        url:    `https://api.rawg.io/api/games?key=${API_KEY}&dates=${hoy},${finAno}&ordering=released&page_size=30`,
+        method: 'GET',
+        success: function(data) {
+            if (!data.results || !data.results.length) {
+                $("#resultado").html("<p class='text-center'>No hay lanzamientos próximos</p>")
+                return
+            }
+            mostrarJuegos(data.results, "Próximos lanzamientos")
+        },
+        error: function() {
+            $("#resultado").html("<p class='text-danger text-center'>Error al cargar próximos</p>")
+        }
+    })
+}
+
+function cargarMejorValorados() {
+    $("#resultado").html('<p class="text-center text-secondary">Cargando...</p>')
+
+    $.ajax({
+        url:    `https://api.rawg.io/api/games?key=${API_KEY}&ordering=-metacritic&page_size=30`,
+        method: 'GET',
+        success: function(data) {
+            mostrarJuegos(data.results, "Top juegos (Metacritic)")
+        },
+        error: function() {
+            $("#resultado").html("<p class='text-danger text-center'>Error al cargar</p>")
+        }
+    })
+}
+
+function mostrarJuegos(juegos, titulo) {
+    if (!juegos || !juegos.length) {
+        $("#resultado").html("<p class='text-center'>No hay resultados</p>")
+        return
+    }
+
+    let html = `<h4 class="text-center mb-3 text-secondary">${titulo}</h4><div class="row">`
+
+    juegos.forEach(juego => {
+        html += `
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 text-white card-animada">
+                    <img src="${juego.background_image || 'https://via.placeholder.com/400x250'}" class="card-img-top">
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title">${juego.name}</h5>
+                        <p class="mb-1">⭐ ${juego.rating}</p>
+                        <p>📅 ${juego.released || 'Desconocido'}</p>
+                        <button class="btn btn-outline-light mt-auto" onclick="verDetalles(${juego.id})">
+                            Ver más
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `
+    })
+
+    html += '</div>'
+    $("#resultado").html(html)
+}
+
+
+
+/* ============================================================
+   EDITAR FAVORITO (UPDATE)
+============================================================ */
+
+function editarNotaFavorito(favId, currentNotes) {
+    document.getElementById('editFavId').value = favId
+    document.getElementById('editFavNotes').value = currentNotes || ''
+    $('#editFavError').hide()
+    new bootstrap.Modal(document.getElementById('modalEditarFav')).show()
+}
+
+async function guardarNotaFavorito() {
+    const favId = document.getElementById('editFavId').value
+    const notes = document.getElementById('editFavNotes').value.trim()
+    $('#editFavError').hide()
+
+    if (notes.length > 500) {
+        $('#editFavError').text('La nota no puede superar 500 caracteres').show()
+        return
+    }
+
+    try {
+        const res  = await fetch(`${BASE_URL}/favorites/${favId}`, {
+            method:  'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({ notes })
+        })
+        const data = await res.json()
+
+        if (!data.success) {
+            $('#editFavError').text(data.message || 'Error al guardar').show()
+            return
+        }
+
+        bootstrap.Modal.getInstance(document.getElementById('modalEditarFav')).hide()
+        mostrarFavoritos()
+
+    } catch(e) {
+        $('#editFavError').text('Error al conectar con el servidor').show()
+    }
+}
+
+
+/* ============================================================
+   QUIÉNES SOMOS
+============================================================ */
+
+function mostrarQuienesSomos() {
+    document.getElementById("heroBusqueda").classList.add("compacto")
+    $("#resultado").html(`
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <h3 class="text-center mb-4"><i class="fa-solid fa-users"></i> Quiénes somos</h3>
+                <div class="card bg-dark border-secondary text-white p-4 mb-4">
+                    <p class="lead">
+                        <strong>GameFinder</strong> es una plataforma de descubrimiento y gestión de videojuegos,
+                        desarrollada como proyecto académico para la materia
+                        <em>Programación para Internet SIS3410</em>.
+                    </p>
+                    <p>
+                        Nuestro objetivo es ayudar a los jugadores a descubrir nuevos títulos,
+                        guardar sus favoritos y compartir reseñas con la comunidad.
+                        Combinamos la base de datos de RAWG.io con un backend propio
+                        construido en Node.js, Express y MongoDB.
+                    </p>
+                    <hr class="border-secondary">
+                    <h5 class="mb-3"><i class="fa-solid fa-code"></i> Tecnologías utilizadas</h5>
+                    <div class="row text-center">
+                        <div class="col-6 col-md-3 mb-3">
+                            <i class="fa-brands fa-node-js fa-2x text-success mb-2 d-block"></i>
+                            <small>Node.js</small>
+                        </div>
+                        <div class="col-6 col-md-3 mb-3">
+                            <i class="fa-solid fa-database fa-2x text-success mb-2 d-block"></i>
+                            <small>MongoDB Atlas</small>
+                        </div>
+                        <div class="col-6 col-md-3 mb-3">
+                            <i class="fa-brands fa-bootstrap fa-2x text-primary mb-2 d-block"></i>
+                            <small>Bootstrap 5</small>
+                        </div>
+                        <div class="col-6 col-md-3 mb-3">
+                            <i class="fa-brands fa-js fa-2x text-warning mb-2 d-block"></i>
+                            <small>jQuery / JS</small>
+                        </div>
+                    </div>
+                    <hr class="border-secondary">
+                    <h5 class="mb-3"><i class="fa-solid fa-graduation-cap"></i> Universidad Anáhuac Mayab</h5>
+                    <p class="text-secondary small mb-0">Programación para Internet &mdash; SIS3410</p>
+                </div>
+            </div>
+        </div>
+    `)
+}
+
+
+/* ============================================================
+   CONTACTO
+============================================================ */
+
+function mostrarContacto() {
+    document.getElementById("heroBusqueda").classList.add("compacto")
+    $("#resultado").html(`
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <h3 class="text-center mb-4"><i class="fa-solid fa-envelope"></i> Contacto</h3>
+                <div class="card bg-dark border-secondary text-white p-4">
+                    <p class="text-secondary small mb-4">
+                        ¿Tienes alguna duda, sugerencia o comentario? Escríbenos y te responderemos a la brevedad.
+                    </p>
+                    <form onsubmit="enviarContacto(event)">
+                        <div class="mb-3">
+                            <label class="form-label small">Nombre completo</label>
+                            <input type="text" id="contactNombre"
+                                class="form-control bg-dark text-white border-secondary"
+                                placeholder="Tu nombre" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small">Correo electrónico</label>
+                            <input type="email" id="contactEmail"
+                                class="form-control bg-dark text-white border-secondary"
+                                placeholder="correo@ejemplo.com" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small">Asunto</label>
+                            <input type="text" id="contactAsunto"
+                                class="form-control bg-dark text-white border-secondary"
+                                placeholder="¿En qué podemos ayudarte?" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small">Mensaje</label>
+                            <textarea id="contactMensaje" rows="4"
+                                class="form-control bg-dark text-white border-secondary"
+                                placeholder="Escribe tu mensaje aquí..." required></textarea>
+                        </div>
+                        <div id="contactSuccess" class="alert alert-success py-2 small" style="display:none">
+                            <i class="fa-solid fa-check-circle"></i> ¡Mensaje enviado con éxito! Nos pondremos en contacto contigo pronto.
+                        </div>
+                        <button type="submit" class="btn btn-warning w-100">
+                            <i class="fa-solid fa-paper-plane"></i> Enviar mensaje
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    `)
+}
+
+function enviarContacto(e) {
+    e.preventDefault()
+    $('#contactSuccess').show()
+    e.target.reset()
+}
+
+
+$(document).ready(function() {
+    actualizarNavbar()
+    if (currentUser) cargarFavoritosUsuario()
+    cargarPopulares()
+
+    $("#NombreJuego").on("keypress", function(e) {
+        if (e.key === "Enter") buscarJuego()
+    })
+})
+</script>
+
+</body>
+</html>
