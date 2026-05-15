@@ -258,7 +258,7 @@
 
 <script>
 const API_KEY  = "17ffcab810ce4802bcbc41f3b318b7fa"
-const BASE_URL = "http://localhost:3000/api"
+const BASE_URL = "https://gamefinderback-1.onrender.com/api"
 
 let currentUser    = JSON.parse(localStorage.getItem('gf_user')) || null
 let favoritosMap   = {}   // { rawgId: favoriteDocId }
@@ -536,9 +536,9 @@ async function quitarFavoritoCard(favId, rawgId, btn) {
 }
 
 
-/* ============================================================
+/* 
    RESEÑAS
-============================================================ */
+=*/
 
 async function cargarReviews(rawgId) {
     try {
